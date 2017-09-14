@@ -10,9 +10,9 @@ using System.Windows.Forms;
 
 namespace TCPClient
 {
-    public partial class Form1 : Form
+    public partial class ClientForm : Form
     {
-        public Form1()
+        public ClientForm()
         {
             InitializeComponent();
         }
