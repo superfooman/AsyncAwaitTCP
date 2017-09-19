@@ -29,9 +29,14 @@ namespace TCPServer
             listener.Start();
             listen = true;
 
-            acceptClientTask = Task.Run(() => AcceptClientsAsync(listener));
+            acceptClientTask = Task.Run(() => acceptClientsAsync(listener));
 
             Task.WhenAll(acceptClientTask);
+        }
+
+        public void Stop()
+        {
+            listen = false;
         }
 
         public bool IsConnectionAvaiable()
@@ -39,7 +44,7 @@ namespace TCPServer
             return (clients.Count != 0);
         }
 
-        private async Task AcceptClientsAsync(TcpListener listener)
+        private async Task acceptClientsAsync(TcpListener listener)
         {
             try
             {
@@ -58,13 +63,13 @@ namespace TCPServer
             }
         }
 
-        private void OnClientConnected(TcpClient client)
+        protected virtual void OnClientConnected(TcpClient client)
         {
             if (ClientConnectedEvent != null)
                 ClientConnectedEvent(this, new ClientConnectedEventArgs(client, "Connected successfully") );
         }
 
-        private void OnNumberOfConnectedClients(List<TcpClient> clients)
+        protected virtual void OnNumberOfConnectedClients(List<TcpClient> clients)
         {
             if (NumberOfClientConnectedEvent != null)
                 NumberOfClientConnectedEvent(this, new NumberOfClientConnectedEventArgs(clients));

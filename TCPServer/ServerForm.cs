@@ -10,7 +10,7 @@ namespace TCPServer
 {
     public partial class ServerForm: Form
     {
-        TcpServer server;
+        private TcpServer server;
         public ServerForm()
         {
             InitializeComponent();
@@ -25,7 +25,7 @@ namespace TCPServer
             statusBarUpdate("Idle", Color.Yellow);
         }
 
-        private void connectToolStripMenuItem_Click(object sender, EventArgs e)
+        private void startToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
@@ -36,8 +36,8 @@ namespace TCPServer
                 {
                     statusBarUpdate("Waiting", Color.Aqua);
                     server = new TcpServer(ipaddress, port);
-                    server.ClientConnectedEvent += ClientConnectedEventHandler;
-                    server.NumberOfClientConnectedEvent += NumberOfClientConnectedEventHandler;
+                    server.ClientConnectedEvent += clientConnectedEventHandler;
+                    server.NumberOfClientConnectedEvent += numberOfClientConnectedEventHandler;
                     server.Start();
                 }
             }
@@ -45,6 +45,17 @@ namespace TCPServer
             {
                 MessageBox.Show("Error: " + ex.Message);
             }
+        }
+
+        private void closeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DialogResult dialogResult = MessageBox.Show("Are you sure you want to close the TCP server", "Information", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (dialogResult == DialogResult.Yes)
+            {
+                if (server != null)
+                    server.Stop();
+                this.Close();
+            }           
         }
 
         private bool validate(out IPAddress ipaddress, out int port)
@@ -67,7 +78,7 @@ namespace TCPServer
             toolStripStatusLabel.BackColor = color;
         }
 
-        private void ClientConnectedEventHandler(object sender, ClientConnectedEventArgs args)
+        private void clientConnectedEventHandler(object sender, ClientConnectedEventArgs args)
         {
             Action<string, string> action = (stringx, stringy) =>
             {
@@ -84,7 +95,7 @@ namespace TCPServer
             }
         }
 
-        private void NumberOfClientConnectedEventHandler(object sender, NumberOfClientConnectedEventArgs args)
+        private void numberOfClientConnectedEventHandler(object sender, NumberOfClientConnectedEventArgs args)
         {
             Action<string, Color> action = statusBarUpdate;
 
@@ -98,7 +109,6 @@ namespace TCPServer
                 action(string.Format("Connection x {0}", args.NumberOfClients), Color.LightGreen);
             }
         }
-
 
     }
 }
