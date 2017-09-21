@@ -6,12 +6,10 @@ namespace TCPServer
     public class ClientConnectedEventArgs : EventArgs
     {
         public string RemoteEndPoint { get; set; }
-        public string Message { get; set; }
 
-        public ClientConnectedEventArgs(TcpClient client, String message)
+        public ClientConnectedEventArgs(TcpClient client)
         {
             RemoteEndPoint = client.Client.RemoteEndPoint.ToString();
-            Message = message;
         }
     }
 }

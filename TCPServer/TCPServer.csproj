@@ -46,6 +46,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="TcpServerEventArgs\GeneralErrorEventArgs.cs" />
+    <Compile Include="TcpServerEventArgs\ClientDataReadEventArgs.cs" />
     <Compile Include="TcpServerEventArgs\NumberOfClientConnectedEventArgs.cs" />
     <Compile Include="TcpServerEventArgs\ClientConnectedEventArgs.cs" />
     <Compile Include="Program.cs" />

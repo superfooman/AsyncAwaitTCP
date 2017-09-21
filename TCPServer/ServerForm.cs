@@ -36,8 +36,11 @@ namespace TCPServer
                 {
                     statusBarUpdate("Waiting", Color.Aqua);
                     server = new TcpServer(ipaddress, port);
-                    server.ClientConnectedEvent += clientConnectedEventHandler;
-                    server.NumberOfClientConnectedEvent += numberOfClientConnectedEventHandler;
+                    server.ClientConnected += server_ClientConnected;
+                    server.ClientDisconnected += server_ClientDisconnected;
+                    server.NumberOfClientConnected += server_NumberOfClientConnected;
+                    server.ClientDataRead += server_ClientDataRead;
+                    server.ErrorHappened += server_ErrorHappened;
                     server.Start();
                 }
             }
@@ -78,7 +81,42 @@ namespace TCPServer
             toolStripStatusLabel.BackColor = color;
         }
 
-        private void clientConnectedEventHandler(object sender, ClientConnectedEventArgs args)
+        private void server_NumberOfClientConnected(object sender, NumberOfClientConnectedEventArgs args)
+        {
+            Action<string, Color> action = statusBarUpdate;
+
+            if (this.InvokeRequired)
+            {
+                if (args.NumberOfClients > 0)
+                    this.Invoke(action, new object[] { string.Format("Connection x {0}", args.NumberOfClients), Color.LightGreen });
+                if (args.NumberOfClients == 0)
+                    statusBarUpdate("Waiting", Color.Aqua);
+            }
+            else
+            {
+                if (args.NumberOfClients > 0)
+                    action(string.Format("Connection x {0}", args.NumberOfClients), Color.LightGreen);
+                if (args.NumberOfClients == 0)
+                    statusBarUpdate("Waiting", Color.Aqua);
+            }
+        }
+
+        private void server_ClientConnected(object sender, ClientConnectedEventArgs args)
+        {
+            displayMessage(args.RemoteEndPoint, "Successfully connected");
+        }
+
+        private void server_ClientDisconnected(object sender, ClientDataReadEventArgs args)
+        {
+            displayMessage(args.RemoteEndPoint, args.Message);
+        }
+
+        private void server_ClientDataRead(object sender, ClientDataReadEventArgs args)
+        {
+            displayMessage(args.RemoteEndPoint, args.Message);
+        }
+
+        private void displayMessage(string name, string message)
         {
             Action<string, string> action = (stringx, stringy) =>
             {
@@ -87,28 +125,18 @@ namespace TCPServer
 
             if (this.InvokeRequired)
             {
-                this.Invoke(action, new object[] { args.RemoteEndPoint, args.Message + Environment.NewLine});
+                this.Invoke(action, new object[] { name, message + Environment.NewLine });
             }
             else
             {
-                action(args.RemoteEndPoint, args.Message + Environment.NewLine);
+                action(name, message + Environment.NewLine);
             }
+
         }
 
-        private void numberOfClientConnectedEventHandler(object sender, NumberOfClientConnectedEventArgs args)
+        private void server_ErrorHappened(object sender, GeneralErrorEventArgs args)
         {
-            Action<string, Color> action = statusBarUpdate;
-
-            if (this.InvokeRequired)
-            {
-                if (args.NumberOfClients > 0)
-                    this.Invoke(action, new object[] { string.Format("Connection x {0}", args.NumberOfClients), Color.LightGreen });
-            }
-            else
-            {
-                action(string.Format("Connection x {0}", args.NumberOfClients), Color.LightGreen);
-            }
+            MessageBox.Show("Error: " + args.Error.Message, "Error");
         }
-
     }
 }

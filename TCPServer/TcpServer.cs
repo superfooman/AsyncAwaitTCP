@@ -13,15 +13,22 @@ namespace TCPServer
         private readonly TcpListener listener;
         private bool listen;
         private Task acceptClientTask;
-        private List<TcpClient> clients = new List<TcpClient>();
+        private List<TcpClient> clients;
+        private List<Task> ReceiveMessageTasks;
 
-        public EventHandler<ClientConnectedEventArgs> ClientConnectedEvent;
-        public EventHandler<NumberOfClientConnectedEventArgs> NumberOfClientConnectedEvent;
+        public EventHandler<ClientConnectedEventArgs> ClientConnected;
+        public EventHandler<ClientDataReadEventArgs> ClientDisconnected;
+        public EventHandler<NumberOfClientConnectedEventArgs> NumberOfClientConnected;
+        public EventHandler<ClientDataReadEventArgs> ClientDataRead;
+        public EventHandler<GeneralErrorEventArgs> ErrorHappened;
 
         public TcpServer(IPAddress ipAddress, int port)
         {
             listener = new TcpListener(ipAddress, port);
             listen = false;
+
+            clients = new List<TcpClient>();
+            ReceiveMessageTasks = new List<Task>();
         }
 
         public void Start()
@@ -39,11 +46,28 @@ namespace TCPServer
             listen = false;
         }
 
-        public bool IsConnectionAvaiable()
+        private bool isConnectionAvaiable(TcpClient client)
         {
-            return (clients.Count != 0);
+            try
+            {
+                bool status = true;
+                if (client.Client.Poll(0, SelectMode.SelectRead))
+                {
+                    byte[] buff = new byte[1];
+                    if (client.Client.Receive(buff, SocketFlags.Peek) == 0)
+                    {
+                        return false;
+                    }
+                }
+                return status;
+            }
+            catch (Exception ex)
+            {
+                OnErrorHappened(ex);
+                return false;
+            }
         }
-
+  
         private async Task acceptClientsAsync(TcpListener listener)
         {
             try
@@ -51,28 +75,76 @@ namespace TCPServer
                 while (listen)
                 {
                     var client = await listener.AcceptTcpClientAsync();
-                    OnClientConnected(client);
+                    ReceiveMessageTasks.Add(receiveMessagesAsync(client));
                     clients.Add(client);
+                    OnClientConnected(client);
                     OnNumberOfConnectedClients(clients);
                 }
-
+                await Task.WhenAll(ReceiveMessageTasks);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                OnErrorHappened(ex); 
             }
+        }
+
+        private async Task receiveMessagesAsync(TcpClient client)
+        {
+            NetworkStream netStream = client.GetStream();
+            StreamReader reader = new StreamReader(netStream);
+            try
+            {
+                while (listen)
+                {
+                    string message = await reader.ReadLineAsync();
+                    if (!isConnectionAvaiable(client))  // message == null
+                    {
+                        throw new Exception("This client is now disconnected");
+                    }
+                    OnClientDataRead(client, message);
+                }
+            }
+            catch (Exception ex)
+            {
+                OnDisconnected(client, ex.Message);
+                clients.Remove(client);
+                OnNumberOfConnectedClients(clients);
+            }
+            finally
+            {
+                netStream.Close();
+                reader.Close();
+            }
+        }
+
+        protected virtual void OnDisconnected(TcpClient client, string errorMessage)
+        {
+            if (ClientDisconnected != null)
+                ClientDisconnected(this, new ClientDataReadEventArgs(client, errorMessage));
         }
 
         protected virtual void OnClientConnected(TcpClient client)
         {
-            if (ClientConnectedEvent != null)
-                ClientConnectedEvent(this, new ClientConnectedEventArgs(client, "Connected successfully") );
+            if (ClientConnected != null)
+                ClientConnected(this, new ClientConnectedEventArgs(client) );
         }
 
         protected virtual void OnNumberOfConnectedClients(List<TcpClient> clients)
         {
-            if (NumberOfClientConnectedEvent != null)
-                NumberOfClientConnectedEvent(this, new NumberOfClientConnectedEventArgs(clients));
+            if (NumberOfClientConnected != null)
+                NumberOfClientConnected(this, new NumberOfClientConnectedEventArgs(clients));
+        }
+
+        protected virtual void OnClientDataRead(TcpClient client, string message)
+        {
+            if (ClientDataRead != null)
+                ClientDataRead(this, new ClientDataReadEventArgs(client, message));
+        }
+
+        protected virtual void OnErrorHappened(Exception error)
+        {
+            if (ErrorHappened != null)
+                ErrorHappened(this, new GeneralErrorEventArgs(error));
         }
     }
 }

@@ -100,9 +100,7 @@
             // 
             // configToolStripMenuItem
             // 
-            this.configToolStripMenuItem.BackColor = System.Drawing.SystemColors.Menu;
-            this.configToolStripMenuItem.Checked = true;
-            this.configToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.configToolStripMenuItem.BackColor = System.Drawing.SystemColors.Control;
             this.configToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.startToolStripMenuItem,
             this.closeToolStripMenuItem});
