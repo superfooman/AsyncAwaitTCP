@@ -90,7 +90,8 @@ namespace TCPServer
 
         private async Task receiveMessagesAsync(TcpClient client)
         {
-            NetworkStream netStream = client.GetStream();
+            NetworkStream netStream = initNetworkStream(client);
+
             StreamReader reader = new StreamReader(netStream);
             try
             {
@@ -115,6 +116,17 @@ namespace TCPServer
                 netStream.Close();
                 reader.Close();
             }
+        }
+
+        private NetworkStream initNetworkStream(TcpClient client)
+        {
+            // clear any unwanted network stream input buffer
+            NetworkStream networkStream = client.GetStream();
+            byte[] buffer = new byte[client.ReceiveBufferSize];    
+            while (networkStream.DataAvailable)
+                networkStream.Read(buffer, 0, buffer.Length);
+
+            return networkStream;
         }
 
         protected virtual void OnDisconnected(TcpClient client, string errorMessage)
