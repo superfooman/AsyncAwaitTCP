@@ -112,14 +112,14 @@
             // startToolStripMenuItem
             // 
             this.startToolStripMenuItem.Name = "startToolStripMenuItem";
-            this.startToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.startToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
             this.startToolStripMenuItem.Text = "Start";
             this.startToolStripMenuItem.Click += new System.EventHandler(this.startToolStripMenuItem_Click);
             // 
             // closeToolStripMenuItem
             // 
             this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
-            this.closeToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.closeToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
             this.closeToolStripMenuItem.Text = "Close";
             this.closeToolStripMenuItem.Click += new System.EventHandler(this.closeToolStripMenuItem_Click);
             // 
@@ -209,6 +209,7 @@
             this.displayTextBox.Margin = new System.Windows.Forms.Padding(1);
             this.displayTextBox.Multiline = true;
             this.displayTextBox.Name = "displayTextBox";
+            this.displayTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.displayTextBox.Size = new System.Drawing.Size(482, 200);
             this.displayTextBox.TabIndex = 10;
             // 
@@ -222,6 +223,7 @@
             this.sendButton.TabIndex = 11;
             this.sendButton.Text = "Send";
             this.sendButton.UseVisualStyleBackColor = true;
+            this.sendButton.Click += new System.EventHandler(this.sendButton_Click);
             // 
             // senderTextBox
             // 
@@ -243,6 +245,8 @@
             this.Name = "ServerForm";
             this.Text = "TCPServer";
             this.Load += new System.EventHandler(this.ServerForm_Load);
+            this.Click += new System.EventHandler(this.sendButton_Click);
+            this.Enter += new System.EventHandler(this.sendButton_Click);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.menuStrip.ResumeLayout(false);

@@ -11,6 +11,8 @@ namespace TCPServer
     public partial class ServerForm: Form
     {
         private TcpServer server;
+        private string host;
+
         public ServerForm()
         {
             InitializeComponent();
@@ -23,6 +25,8 @@ namespace TCPServer
             displayTextBox.ReadOnly = true;
             displayTextBox.ForeColor = Color.DarkBlue;
             statusBarUpdate("Idle", Color.Yellow);
+            host = "LocalHost";
+            AcceptButton = sendButton;
         }
 
         private void startToolStripMenuItem_Click(object sender, EventArgs e)
@@ -61,6 +65,19 @@ namespace TCPServer
             }           
         }
 
+        private void sendButton_Click(object sender, EventArgs e)
+        {
+            if (server != null)
+            {
+                if ((server.IsConnectingToClient) && !string.IsNullOrEmpty(senderTextBox.Text))
+                {
+                    displayMessage(host, senderTextBox.Text);
+                    server.BroadCastAsync(server.HostID, senderTextBox.Text);
+                }
+            }
+            senderTextBox.Text = "";
+        }
+
         private bool validate(out IPAddress ipaddress, out int port)
         {
             if (!int.TryParse(portTextBox.Text, out port))
@@ -79,6 +96,25 @@ namespace TCPServer
         {
             toolStripStatusLabel.Text = String.Format("Status: {0}...", message);
             toolStripStatusLabel.BackColor = color;
+        }
+
+        private void displayMessage(string name, string message)
+        {
+            Action<string, string> action = (stringx, stringy) =>
+            {
+                displayTextBox.Text += string.Format("[{0}]: {1}", stringx, stringy);
+                displayTextBox.SelectionStart = displayTextBox.Text.Length;
+                displayTextBox.ScrollToCaret();
+            };
+
+            if (this.InvokeRequired)
+            {
+                this.Invoke(action, new object[] { name, message + Environment.NewLine });
+            }
+            else
+            {
+                action(name, message + Environment.NewLine);
+            }
         }
 
         private void server_NumberOfClientConnected(object sender, NumberOfClientConnectedEventArgs args)
@@ -114,24 +150,6 @@ namespace TCPServer
         private void server_ClientDataRead(object sender, ClientDataReadEventArgs args)
         {
             displayMessage(args.RemoteEndPoint, args.Message);
-        }
-
-        private void displayMessage(string name, string message)
-        {
-            Action<string, string> action = (stringx, stringy) =>
-            {
-                displayTextBox.Text += string.Format("[{0}]: {1}", stringx, stringy);
-            };
-
-            if (this.InvokeRequired)
-            {
-                this.Invoke(action, new object[] { name, message + Environment.NewLine });
-            }
-            else
-            {
-                action(name, message + Environment.NewLine);
-            }
-
         }
 
         private void server_ErrorHappened(object sender, GeneralErrorEventArgs args)

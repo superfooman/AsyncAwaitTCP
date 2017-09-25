@@ -16,6 +16,19 @@ namespace TCPServer
         private List<TcpClient> clients;
         private List<Task> ReceiveMessageTasks;
 
+        public string HostID
+        {
+            get { return listener.LocalEndpoint.ToString(); }
+        }
+        public bool IsListening
+        {
+            get { return listen; }
+        }
+        public bool IsConnectingToClient
+        {
+            get { return clients.Count > 0; }
+        }
+
         public EventHandler<ClientConnectedEventArgs> ClientConnected;
         public EventHandler<ClientDataReadEventArgs> ClientDisconnected;
         public EventHandler<NumberOfClientConnectedEventArgs> NumberOfClientConnected;
@@ -44,6 +57,25 @@ namespace TCPServer
         public void Stop()
         {
             listen = false;
+            for (int i = 0; i < clients.Count; i++)
+            {
+                clients[i].GetStream().Close();
+                clients[i].Close();
+            }
+            clients.Clear();
+        }
+
+        public void BroadCastAsync(string hostId, string boradCastMessage)
+        {
+            if (listen)
+            {
+                Parallel.ForEach(clients, async (client) =>
+                {
+                    var writer = new StreamWriter(client.GetStream());
+                    writer.AutoFlush = true;
+                    await writer.WriteLineAsync(string.Format("[{0}]: {1}", hostId, boradCastMessage));
+                });
+            }
         }
 
         private bool isConnectionAvaiable(TcpClient client)
@@ -67,7 +99,17 @@ namespace TCPServer
                 return false;
             }
         }
-  
+
+        private NetworkStream initNetworkStream(TcpClient client)
+        {
+            // clear(read) any unwanted network stream input buffer during initilization
+            NetworkStream networkStream = client.GetStream();
+            byte[] buffer = new byte[client.ReceiveBufferSize];
+            networkStream.Read(buffer, 0, buffer.Length);
+
+            return networkStream;
+        }
+
         private async Task acceptClientsAsync(TcpListener listener)
         {
             try
@@ -91,14 +133,13 @@ namespace TCPServer
         private async Task receiveMessagesAsync(TcpClient client)
         {
             NetworkStream netStream = initNetworkStream(client);
-
             StreamReader reader = new StreamReader(netStream);
             try
             {
                 while (listen)
                 {
                     string message = await reader.ReadLineAsync();
-                    if (!isConnectionAvaiable(client))  // message == null
+                    if (!isConnectionAvaiable(client))
                     {
                         throw new Exception("This client is now disconnected");
                     }
@@ -116,17 +157,6 @@ namespace TCPServer
                 netStream.Close();
                 reader.Close();
             }
-        }
-
-        private NetworkStream initNetworkStream(TcpClient client)
-        {
-            // clear any unwanted network stream input buffer
-            NetworkStream networkStream = client.GetStream();
-            byte[] buffer = new byte[client.ReceiveBufferSize];    
-            while (networkStream.DataAvailable)
-                networkStream.Read(buffer, 0, buffer.Length);
-
-            return networkStream;
         }
 
         protected virtual void OnDisconnected(TcpClient client, string errorMessage)
