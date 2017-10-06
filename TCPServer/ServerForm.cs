@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Data;
 using System.Drawing;
 using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace TCPServer
@@ -43,7 +40,7 @@ namespace TCPServer
                     server.ClientConnected += server_ClientConnected;
                     server.ClientDisconnected += server_ClientDisconnected;
                     server.NumberOfClientConnected += server_NumberOfClientConnected;
-                    server.ClientDataRead += server_ClientDataRead;
+                    server.ClientMessageDisplayed += server_ClientMessageDisplayed;
                     server.ErrorHappened += server_ErrorHappened;
                     server.Start();
                 }
@@ -72,7 +69,7 @@ namespace TCPServer
                 if ((server.IsConnectingToClient) && !string.IsNullOrEmpty(senderTextBox.Text))
                 {
                     displayMessage(host, senderTextBox.Text);
-                    server.BroadCastAsync(server.HostID, senderTextBox.Text);
+                    server.BroadCast(server.HostID, senderTextBox.Text);
                 }
             }
             senderTextBox.Text = "";
@@ -147,7 +144,7 @@ namespace TCPServer
             displayMessage(args.RemoteEndPoint, args.Message);
         }
 
-        private void server_ClientDataRead(object sender, ClientDataReadEventArgs args)
+        private void server_ClientMessageDisplayed(object sender, ClientDataReadEventArgs args)
         {
             displayMessage(args.RemoteEndPoint, args.Message);
         }

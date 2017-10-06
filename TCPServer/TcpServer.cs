@@ -4,6 +4,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Reflection;
+using TCPServer.APICommand;
+using TCPServer.APIFeedback;
 
 // Wrapper around the TCPListener class
 namespace TCPServer
@@ -14,8 +17,13 @@ namespace TCPServer
         private bool listen;
         private Task acceptClientTask;
         private List<TcpClient> clients;
-        private List<Task> ReceiveMessageTasks;
+        private List<Task> receiveMessageTasks;
+        private ICommand[] availableAPICommands;
 
+        public string HostName
+        {
+            get { return Environment.MachineName; }
+        }
         public string HostID
         {
             get { return listener.LocalEndpoint.ToString(); }
@@ -28,54 +36,29 @@ namespace TCPServer
         {
             get { return clients.Count > 0; }
         }
+        public ICommand[] AvailableAPICommands
+        {
+            get
+            {
+                return availableAPICommands;
+            }
+        }
 
         public EventHandler<ClientConnectedEventArgs> ClientConnected;
         public EventHandler<ClientDataReadEventArgs> ClientDisconnected;
         public EventHandler<NumberOfClientConnectedEventArgs> NumberOfClientConnected;
-        public EventHandler<ClientDataReadEventArgs> ClientDataRead;
+        public EventHandler<ClientDataReadEventArgs> ClientMessageDisplayed;
         public EventHandler<GeneralErrorEventArgs> ErrorHappened;
 
+        // Constructor
         public TcpServer(IPAddress ipAddress, int port)
         {
             listener = new TcpListener(ipAddress, port);
             listen = false;
 
             clients = new List<TcpClient>();
-            ReceiveMessageTasks = new List<Task>();
-        }
-
-        public void Start()
-        {
-            listener.Start();
-            listen = true;
-
-            acceptClientTask = Task.Run(() => acceptClientsAsync(listener));
-
-            Task.WhenAll(acceptClientTask);
-        }
-
-        public void Stop()
-        {
-            listen = false;
-            for (int i = 0; i < clients.Count; i++)
-            {
-                clients[i].GetStream().Close();
-                clients[i].Close();
-            }
-            clients.Clear();
-        }
-
-        public void BroadCastAsync(string hostId, string boradCastMessage)
-        {
-            if (listen)
-            {
-                Parallel.ForEach(clients, async (client) =>
-                {
-                    var writer = new StreamWriter(client.GetStream());
-                    writer.AutoFlush = true;
-                    await writer.WriteLineAsync(string.Format("[{0}]: {1}", hostId, boradCastMessage));
-                });
-            }
+            receiveMessageTasks = new List<Task>();
+            availableAPICommands = loadAvaialbeAPICommands();
         }
 
         private bool isConnectionAvaiable(TcpClient client)
@@ -100,6 +83,27 @@ namespace TCPServer
             }
         }
 
+        private ICommand[] loadAvaialbeAPICommands()
+        {
+            Assembly serverAssembly = Assembly.GetAssembly(GetType());
+
+            Type[] types = serverAssembly.GetTypes();
+
+            List<ICommand> commands = new List<ICommand>();
+
+            foreach (Type type in types)
+            {
+                if ((!type.IsAbstract) && (!type.IsInterface))
+                {
+                    if (typeof(ICommand).IsAssignableFrom(type))
+                    {
+                        commands.Add((ICommand)Activator.CreateInstance(type));
+                    }
+                }
+            }
+            return commands.ToArray();
+        }
+
         private NetworkStream initNetworkStream(TcpClient client)
         {
             // clear(read) any unwanted network stream input buffer during initilization
@@ -110,6 +114,19 @@ namespace TCPServer
             return networkStream;
         }
 
+        private void feedbackMessage(string hostId, string feedBack, TcpClient client)
+        {
+            if (listen)
+            {
+                Task task = Task.Run(async () =>
+                {
+                    var writer = new StreamWriter(client.GetStream());
+                    writer.AutoFlush = true;
+                    await writer.WriteLineAsync(string.Format("[{0}]: {1}", hostId, feedBack));
+                });
+            }
+        }
+
         private async Task acceptClientsAsync(TcpListener listener)
         {
             try
@@ -117,12 +134,12 @@ namespace TCPServer
                 while (listen)
                 {
                     var client = await listener.AcceptTcpClientAsync();
-                    ReceiveMessageTasks.Add(receiveMessagesAsync(client));
+                    receiveMessageTasks.Add(receiveClientMessagesAsync(client));
                     clients.Add(client);
                     OnClientConnected(client);
                     OnNumberOfConnectedClients(clients);
                 }
-                await Task.WhenAll(ReceiveMessageTasks);
+                await Task.WhenAll(receiveMessageTasks);
             }
             catch (Exception ex)
             {
@@ -130,7 +147,7 @@ namespace TCPServer
             }
         }
 
-        private async Task receiveMessagesAsync(TcpClient client)
+        private async Task receiveClientMessagesAsync(TcpClient client)
         {
             NetworkStream netStream = initNetworkStream(client);
             StreamReader reader = new StreamReader(netStream);
@@ -143,12 +160,29 @@ namespace TCPServer
                     {
                         throw new Exception("This client is now disconnected");
                     }
-                    OnClientDataRead(client, message);
+                    OnClientMessageDisplayed(client, message);
+
+                    string clientAPICommand = CommandBase.GetAPICommand(message);
+                    if (clientAPICommand != null)
+                    {
+                        IFeedBack response;
+                        ICommand APICommand = Array.Find(AvailableAPICommands, (item) => item.Command.ToLower() == clientAPICommand.ToLower());
+                        if (APICommand != null)
+                        {
+                            response = APICommand.ProcessCommand(this);
+                        }
+                        else
+                        {
+                            response = CommandBase.InvalidCommand();
+                        }
+                        feedbackMessage(HostID, response.FeedBack, client);
+                    }
+
                 }
             }
             catch (Exception ex)
             {
-                OnDisconnected(client, ex.Message);
+                OnClientDisconnected(client, ex.Message);
                 clients.Remove(client);
                 OnNumberOfConnectedClients(clients);
             }
@@ -159,7 +193,7 @@ namespace TCPServer
             }
         }
 
-        protected virtual void OnDisconnected(TcpClient client, string errorMessage)
+        protected virtual void OnClientDisconnected(TcpClient client, string errorMessage)
         {
             if (ClientDisconnected != null)
                 ClientDisconnected(this, new ClientDataReadEventArgs(client, errorMessage));
@@ -177,16 +211,82 @@ namespace TCPServer
                 NumberOfClientConnected(this, new NumberOfClientConnectedEventArgs(clients));
         }
 
-        protected virtual void OnClientDataRead(TcpClient client, string message)
+        protected virtual void OnClientMessageDisplayed(TcpClient client, string message)
         {
-            if (ClientDataRead != null)
-                ClientDataRead(this, new ClientDataReadEventArgs(client, message));
+            if (ClientMessageDisplayed != null)
+                ClientMessageDisplayed(this, new ClientDataReadEventArgs(client, message));
         }
 
         protected virtual void OnErrorHappened(Exception error)
         {
             if (ErrorHappened != null)
                 ErrorHappened(this, new GeneralErrorEventArgs(error));
+        }
+
+        // Public API
+        public void Start()
+        {
+            listener.Start();
+            listen = true;
+
+            acceptClientTask = Task.Run(() => acceptClientsAsync(listener));
+
+            Task.WhenAll(acceptClientTask);
+        }
+
+        public void Stop()
+        {
+            listen = false;
+            for (int i = 0; i < clients.Count; i++)
+            {
+                clients[i].GetStream().Close();
+                clients[i].Close();
+            }
+            clients.Clear();
+        }
+
+        public void BroadCast(string hostId, string boradCastMessage)
+        {
+            if (listen)
+            {
+                Parallel.ForEach(clients, async (client) =>
+                {
+                    var writer = new StreamWriter(client.GetStream());
+                    writer.AutoFlush = true;
+                    await writer.WriteLineAsync(string.Format("[{0}]: {1}", hostId, boradCastMessage));
+                });
+            }
+        }
+
+        // Simple client remote API commands
+        internal bool Validate() 
+        {
+            return IsListening;
+        }
+
+        internal string GetHostName()
+        {
+            return HostName;
+        }
+
+        internal int GetNumberOfClients()
+        {
+            return clients.Count;
+        }
+
+        internal int GetNumberOfAPICommands()
+        {
+            return AvailableAPICommands.Length;
+        }
+
+        internal Dictionary<string, string> Help()
+        {
+            var commandDictionary = new Dictionary<string, string>();
+            foreach (var APICommand in AvailableAPICommands)
+            {
+                commandDictionary.Add(APICommand.Command, APICommand.Description);
+            }
+            return commandDictionary;
         }
     }
 }

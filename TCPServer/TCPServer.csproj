@@ -46,6 +46,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="APICommand\CommandBase.cs" />
+    <Compile Include="APICommand\Help.cs" />
+    <Compile Include="APICommand\GetHostName.cs" />
+    <Compile Include="APICommand\GetNumberOfAPICommands.cs" />
+    <Compile Include="APICommand\GetNumberOfClients.cs" />
+    <Compile Include="APICommand\ICommand.cs" />
+    <Compile Include="APICommand\Validate.cs" />
+    <Compile Include="APIFeedback\ValidFeedBack.cs" />
+    <Compile Include="APIFeedback\IFeedBack.cs" />
+    <Compile Include="APIFeedback\InvalidFeedBack.cs" />
     <Compile Include="TcpServerEventArgs\GeneralErrorEventArgs.cs" />
     <Compile Include="TcpServerEventArgs\ClientDataReadEventArgs.cs" />
     <Compile Include="TcpServerEventArgs\NumberOfClientConnectedEventArgs.cs" />
