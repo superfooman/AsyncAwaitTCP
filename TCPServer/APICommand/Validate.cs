@@ -8,7 +8,7 @@ namespace TCPServer.APICommand
         {
             get
             {
-                return ("Descritipon: Check to make sure TCP server is active");
+                return ("Check to make sure TCP server is active");
             }
         }
 

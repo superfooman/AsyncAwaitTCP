@@ -9,7 +9,7 @@ namespace TCPServer.APICommand
         {
             get
             {
-                return "Descritipon: Obtain number of available API Commands";
+                return "Obtain number of available API Commands";
             }
         }
 

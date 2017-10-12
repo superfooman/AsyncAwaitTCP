@@ -13,7 +13,7 @@ namespace TCPServer.APICommand
         {
             get
             {
-                return "Descritipon: Obtain the names and descritpions for each available API commands";
+                return "Obtain the names and descritpions for each available API commands";
             }
         }
 
@@ -25,9 +25,10 @@ namespace TCPServer.APICommand
             StringBuilder feedBackMessage = new StringBuilder();
             foreach (var APICommand in APICommandDictionary)
             {
-                feedBackMessage.Append(Environment.NewLine + APICommand.Key + parenthesis);
-                feedBackMessage.Append(Environment.NewLine + APICommand.Value + Environment.NewLine);
+                feedBackMessage.Append(string.Format("{0}{1}{2}  \'{3}\'", Environment.NewLine, APICommand.Key, parenthesis, APICommand.Value));
             }
+            feedBackMessage.Append(Environment.NewLine);
+
             return new ValidFeedBack(feedBackMessage.ToString());
         }
     }

@@ -9,7 +9,7 @@ namespace TCPServer.APICommand
         {
             get
             {
-                return "Descritipon: Obtain host machine name";
+                return "Obtain host machine name";
             }
         }
 

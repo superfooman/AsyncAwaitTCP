@@ -122,7 +122,7 @@ namespace TCPServer
                 {
                     var writer = new StreamWriter(client.GetStream());
                     writer.AutoFlush = true;
-                    await writer.WriteLineAsync(string.Format("[{0}]: {1}", hostId, feedBack));
+                    await writer.WriteLineAsync(string.Format("-----{0}-----", feedBack));
                 });
             }
         }
@@ -160,8 +160,7 @@ namespace TCPServer
                     {
                         throw new Exception("This client is now disconnected");
                     }
-                    OnClientMessageDisplayed(client, message);
-
+                    
                     string clientAPICommand = CommandBase.GetAPICommand(message);
                     if (clientAPICommand != null)
                     {
@@ -176,6 +175,10 @@ namespace TCPServer
                             response = CommandBase.InvalidCommand();
                         }
                         feedbackMessage(HostID, response.FeedBack, client);
+                    }
+                    else
+                    {
+                        OnClientMessageDisplayed(client, message);
                     }
 
                 }
@@ -237,12 +240,16 @@ namespace TCPServer
         public void Stop()
         {
             listen = false;
+            string disconnectMessage = "This client is now forced to disconnect";
             for (int i = 0; i < clients.Count; i++)
             {
                 clients[i].GetStream().Close();
                 clients[i].Close();
+                OnClientDisconnected(clients[i], disconnectMessage);
             }
             clients.Clear();
+            OnNumberOfConnectedClients(clients);
+
         }
 
         public void BroadCast(string hostId, string boradCastMessage)

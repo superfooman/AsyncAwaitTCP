@@ -9,7 +9,7 @@ namespace TCPServer.APICommand
         {
             get
             {
-                return "Descritipon: Obtain number of connected clients";
+                return "Obtain number of connected clients";
             }
         }
 

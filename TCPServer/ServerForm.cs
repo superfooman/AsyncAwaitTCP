@@ -44,6 +44,9 @@ namespace TCPServer
                     server.ErrorHappened += server_ErrorHappened;
                     server.Start();
                 }
+
+                ipaddressTextBox.ReadOnly = true;
+                portTextBox.ReadOnly = true;
             }
             catch (Exception ex)
             {
@@ -60,6 +63,15 @@ namespace TCPServer
                     server.Stop();
                 this.Close();
             }           
+        }
+
+        private void restartToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (server != null)
+                server.Stop();
+
+            ipaddressTextBox.ReadOnly = false;
+            portTextBox.ReadOnly = false;
         }
 
         private void sendButton_Click(object sender, EventArgs e)
