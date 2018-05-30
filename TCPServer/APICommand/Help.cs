@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TCPServer.APIArgument;
 using TCPServer.APIFeedback;
 
 namespace TCPServer.APICommand
@@ -17,19 +18,29 @@ namespace TCPServer.APICommand
             }
         }
 
-        public override IFeedBack ProcessCommand(TcpServer Server)
+        public override IArgs[] Arguments
         {
-            var APICommandDictionary = Server.Help();
-            const string parenthesis = "()";
+            get { return new IArgs[0]; }
+        }
 
-            StringBuilder feedBackMessage = new StringBuilder();
-            foreach (var APICommand in APICommandDictionary)
+        public override IFeedBack ProcessCommand(TcpServer Server, string[] args)
+        {
+            if (ArgumentsValidation(args))
             {
-                feedBackMessage.Append(string.Format("{0}{1}{2}  \'{3}\'", Environment.NewLine, APICommand.Key, parenthesis, APICommand.Value));
-            }
-            feedBackMessage.Append(Environment.NewLine);
+                var APICommandDictionary = Server.Help();
+                const string parenthesis = "()";
 
-            return new ValidFeedBack(feedBackMessage.ToString());
+                StringBuilder feedBackMessage = new StringBuilder();
+                foreach (var APICommand in APICommandDictionary)
+                {
+                    feedBackMessage.Append(string.Format("{0}{1}{2}  \'{3}\'", Environment.NewLine, APICommand.Key, parenthesis, APICommand.Value));
+                }
+                feedBackMessage.Append(Environment.NewLine);
+
+                return new ValidFeedBack(feedBackMessage.ToString());
+            }
+
+            return InvalidInputParameter();
         }
     }
 }

@@ -160,15 +160,15 @@ namespace TCPServer
                     {
                         throw new Exception("This client is now disconnected");
                     }
-                    
-                    string clientAPICommand = CommandBase.GetAPICommand(message);
+                    string[] args;
+                    string clientAPICommand = CommandBase.GetAPICommand(message, out args);
                     if (clientAPICommand != null)
                     {
                         IFeedBack response;
-                        ICommand APICommand = Array.Find(AvailableAPICommands, (item) => item.Command.ToLower() == clientAPICommand.ToLower());
+                        ICommand APICommand = Array.Find(AvailableAPICommands, (item) => item.CommandName.ToLower() == clientAPICommand.ToLower());
                         if (APICommand != null)
                         {
-                            response = APICommand.ProcessCommand(this);
+                            response = APICommand.ProcessCommand(this, args);
                         }
                         else
                         {
@@ -291,9 +291,15 @@ namespace TCPServer
             var commandDictionary = new Dictionary<string, string>();
             foreach (var APICommand in AvailableAPICommands)
             {
-                commandDictionary.Add(APICommand.Command, APICommand.Description);
+                commandDictionary.Add(APICommand.CommandName, APICommand.Description);
             }
             return commandDictionary;
+        }
+
+        // Simple client remote API commands for Math operation (for demonstrating purpose)
+        internal double Adder(double a, double b)
+        {
+            return a + b;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using TCPServer.APIArgument;
 using TCPServer.APIFeedback;
 
 namespace TCPServer.APICommand
@@ -13,12 +14,22 @@ namespace TCPServer.APICommand
             }
         }
 
-        public override IFeedBack ProcessCommand(TcpServer Server)
+        public override IArgs[] Arguments
         {
-            int num = Server.GetNumberOfClients();
-            string feedBackMessage = string.Format("Number of connected clients: {0}", num);
+            get { return new IArgs[0]; }
+        }
 
-            return new ValidFeedBack(feedBackMessage);
+        public override IFeedBack ProcessCommand(TcpServer Server, string[] args)
+        {
+            if (ArgumentsValidation(args))
+            {
+                int num = Server.GetNumberOfClients();
+                string feedBackMessage = string.Format("Number of connected clients: {0}", num);
+
+                return new ValidFeedBack(feedBackMessage);
+            }
+
+            return InvalidInputParameter();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using TCPServer.APIFeedback;
+﻿using TCPServer.APIArgument;
+using TCPServer.APIFeedback;
 
 namespace TCPServer.APICommand
 {
@@ -12,17 +13,27 @@ namespace TCPServer.APICommand
             }
         }
 
-        public override IFeedBack ProcessCommand(TcpServer Server)
+        public override IArgs[] Arguments
         {
-            bool status = Server.Validate();
-            string feedbackMessage;
+            get { return new IArgs[0]; }
+        }
 
-            if (status)
-                feedbackMessage = "Server is active";
-            else
-                feedbackMessage = "Server is not active";
+        public override IFeedBack ProcessCommand(TcpServer Server, string[] args)
+        {
+            if (ArgumentsValidation(args))
+            {
+                bool status = Server.Validate();
+                string feedbackMessage;
 
-            return new ValidFeedBack(feedbackMessage);            
+                if (status)
+                    feedbackMessage = "Server is active";
+                else
+                    feedbackMessage = "Server is not active";
+
+                return new ValidFeedBack(feedbackMessage);
+            }
+
+            return InvalidInputParameter();
         }
     }
 }

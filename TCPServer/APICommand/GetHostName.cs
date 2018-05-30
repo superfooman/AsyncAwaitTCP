@@ -1,4 +1,5 @@
 ﻿using System;
+using TCPServer.APIArgument;
 using TCPServer.APIFeedback;
 
 namespace TCPServer.APICommand
@@ -13,12 +14,22 @@ namespace TCPServer.APICommand
             }
         }
 
-        public override IFeedBack ProcessCommand(TcpServer Server)
+        public override IArgs[] Arguments
         {
-            string hostName = Server.GetHostName();
-            string feedBackMessage = string.Format("Host name is {0}:", hostName);
+            get { return new IArgs[0]; }
+        }
 
-            return new ValidFeedBack(feedBackMessage);
+        public override IFeedBack ProcessCommand(TcpServer Server, string[] args)
+        {
+            if (ArgumentsValidation(args))
+            {
+                string hostName = Server.GetHostName();
+                string feedBackMessage = string.Format("Host name is {0}:", hostName);
+
+                return new ValidFeedBack(feedBackMessage);
+            }
+
+            return InvalidInputParameter();
         }
     }
 }

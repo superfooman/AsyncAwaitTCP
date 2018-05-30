@@ -46,6 +46,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="APIArgument\ArgumentBase.cs" />
+    <Compile Include="APIArgument\DoubleArgs.cs" />
+    <Compile Include="APIArgument\IArgs.cs" />
+    <Compile Include="APIArgument\StringArgs.cs" />
+    <Compile Include="APICommand\Adder.cs" />
     <Compile Include="APICommand\CommandBase.cs" />
     <Compile Include="APICommand\Help.cs" />
     <Compile Include="APICommand\GetHostName.cs" />
