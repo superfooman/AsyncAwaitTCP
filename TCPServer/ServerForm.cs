@@ -26,7 +26,7 @@ namespace TCPServer
             AcceptButton = sendButton;
         }
 
-        private void startToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void startToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
@@ -42,7 +42,7 @@ namespace TCPServer
                     server.NumberOfClientConnected += server_NumberOfClientConnected;
                     server.ClientMessageDisplayed += server_ClientMessageDisplayed;
                     server.ErrorHappened += server_ErrorHappened;
-                    server.Start();
+                    await server.Start();
                 }
 
                 ipaddressTextBox.ReadOnly = true;

@@ -15,7 +15,6 @@ namespace TCPServer
     {
         private readonly TcpListener listener;
         private bool listen;
-        private Task acceptClientTask;
         private List<TcpClient> clients;
         private List<Task> receiveMessageTasks;
         private ICommand[] availableAPICommands;
@@ -227,14 +226,13 @@ namespace TCPServer
         }
 
         // Public API
-        public void Start()
+        public async Task Start()
         {
             listener.Start();
             listen = true;
 
-            acceptClientTask = Task.Run(() => acceptClientsAsync(listener));
+            await acceptClientsAsync(listener);
 
-            Task.WhenAll(acceptClientTask);
         }
 
         public void Stop()
