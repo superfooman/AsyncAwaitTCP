@@ -60,7 +60,14 @@ namespace TCPServer
             if (dialogResult == DialogResult.Yes)
             {
                 if (server != null)
+                {
+                    server.ClientConnected -= server_ClientConnected;
+                    server.ClientDisconnected -= server_ClientDisconnected;
+                    server.NumberOfClientConnected -= server_NumberOfClientConnected;
+                    server.ClientMessageDisplayed -= server_ClientMessageDisplayed;
+                    server.ErrorHappened -= server_ErrorHappened;
                     server.Stop();
+                }
                 this.Close();
             }           
         }
