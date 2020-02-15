@@ -60,7 +60,7 @@ namespace TCPServer
             availableAPICommands = loadAvaialbeAPICommands();
         }
 
-        private bool isConnectionAvailable(TcpClient client)
+        private bool isConnectionAvaiable(TcpClient client)
         {
             try
             {
@@ -105,14 +105,10 @@ namespace TCPServer
 
         private NetworkStream initNetworkStream(TcpClient client)
         {
-            NetworkStream networkStream = client.GetStream();
             // clear(read) any unwanted network stream input buffer during initilization
-            // if there is no unwanted network stream input, skip the read/clear buffer action
-            if (networkStream.DataAvailable)
-            {
-                byte[] buffer = new byte[client.ReceiveBufferSize];
-                networkStream.Read(buffer, 0, buffer.Length);
-            }
+            NetworkStream networkStream = client.GetStream();
+            byte[] buffer = new byte[client.ReceiveBufferSize];
+            networkStream.Read(buffer, 0, buffer.Length);
 
             return networkStream;
         }
@@ -159,7 +155,7 @@ namespace TCPServer
                 while (listen)
                 {
                     string message = await reader.ReadLineAsync();
-                    if (!isConnectionAvailable(client))
+                    if (!isConnectionAvaiable(client))
                     {
                         throw new Exception("This client is now disconnected");
                     }
