@@ -55,7 +55,6 @@
       <DependentUpon>ClientForm.cs</DependentUpon>
     </Compile>
     <Compile Include="TcpClientEventArgs\GeneralErrorEventArgs.cs" />
-    <Compile Include="TcpClientEventArgs\NumberOfClientConnectedEventArgs.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteClient.cs" />

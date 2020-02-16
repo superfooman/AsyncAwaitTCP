@@ -30,7 +30,7 @@ namespace TCPClient
         public async Task Connect(IPAddress server, int port)
         {
             await remoteClient.ConnectAsync(server, port);
-            receivingMessageTask = Task.Run(() => ReceiveMessageAysnc(remoteClient));
+            receivingMessageTask = Task.Run(() => receiveMessageAysnc(remoteClient));
             OnClientConnected(remoteClient);
             await Task.WhenAll(receivingMessageTask);
         }
@@ -41,17 +41,18 @@ namespace TCPClient
             OnClientDisconnected(remoteClient);
         }
 
-        public void Send(string message)
+        public void SendMessage(string message)
         {
             var writer = new StreamWriter(remoteClient.GetStream());
             writer.AutoFlush = true;
             try
             {
                 Task.Factory.StartNew(async() => await writer.WriteLineAsync(message));
-            }
+                //await writer.FlushAsync();
+                }
             catch (Exception ex)
             {
-                OnClientMessageDisplayed(remoteClient, ex.Message);
+                OnErrorHappened(ex);
             }
             finally
             {
@@ -61,7 +62,7 @@ namespace TCPClient
         #endregion
 
         #region private methods
-        private async Task ReceiveMessageAysnc(TcpClient remoteClient)
+        private async Task receiveMessageAysnc(TcpClient remoteClient)
         {
             NetworkStream networkStream = initNetworkStream(remoteClient);
             StreamReader reader = new StreamReader(networkStream);
@@ -80,7 +81,7 @@ namespace TCPClient
             }
             catch (Exception ex)
             {
-                OnClientMessageDisplayed(remoteClient, ex.Message);
+                OnErrorHappened(ex);
             }
             finally
             {
@@ -109,26 +110,26 @@ namespace TCPClient
             // check if the remote connection is responsive to the server (listener)
             try
             {
-                bool status = true;
-                if (remoteClient.Client.Poll(0, SelectMode.SelectRead))
+                bool status = false;
+                if (!remoteClient.Client.Poll(0, SelectMode.SelectRead))
                 {
                     byte[] buff = new byte[1];
-                    if (remoteClient.Client.Receive(buff, SocketFlags.Peek) == 0)
+                    if (remoteClient.Client.Receive(buff, SocketFlags.Peek) != 0)
                     {
-                        return false;
+                        return true;
                     }
                 }
                 return status;
             }
-            catch (Exception ex)
+            catch
             {
-                OnErrorHappened(ex);
-                return false;
+                throw;
             }
         }
         #endregion
 
-        #region Fire up the events
+        #region Fire up the events (EventHandler)
+
         protected virtual void OnClientConnected(TcpClient client)
         {
             if (ClientConnected != null)
