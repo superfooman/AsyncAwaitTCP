@@ -37,6 +37,7 @@ namespace TCPClient
 
         public void Disconnect()
         {
+            remoteClient.GetStream().Close();
             remoteClient.Close();
             OnClientDisconnected(remoteClient);
         }
@@ -47,16 +48,14 @@ namespace TCPClient
             writer.AutoFlush = true;
             try
             {
-                Task.Factory.StartNew(async() => await writer.WriteLineAsync(message));
+                Task.Factory.StartNew(async () => await writer.WriteLineAsync(message));
                 //await writer.FlushAsync();
-                }
+            }
             catch (Exception ex)
             {
-                OnErrorHappened(ex);
-            }
-            finally
-            {
                 writer.Close();
+                OnErrorHappened(ex);
+                OnClientDisconnected(remoteClient);
             }
         }
         #endregion
@@ -75,13 +74,14 @@ namespace TCPClient
                     {
                         throw new Exception("This remote client is now disconnected");
                     }
-                    OnClientMessageDisplayed(remoteClient, message);
+                    OnClientMessageDisplayed(message);
 
                 }
             }
             catch (Exception ex)
             {
                 OnErrorHappened(ex);
+                OnClientDisconnected(remoteClient);
             }
             finally
             {
@@ -110,13 +110,13 @@ namespace TCPClient
             // check if the remote connection is responsive to the server (listener)
             try
             {
-                bool status = false;
-                if (!remoteClient.Client.Poll(0, SelectMode.SelectRead))
+                bool status = true;
+                if (remoteClient.Client.Poll(0, SelectMode.SelectRead))
                 {
                     byte[] buff = new byte[1];
-                    if (remoteClient.Client.Receive(buff, SocketFlags.Peek) != 0)
+                    if (remoteClient.Client.Receive(buff, SocketFlags.Peek) == 0)
                     {
-                        return true;
+                        return false;
                     }
                 }
                 return status;
@@ -142,10 +142,10 @@ namespace TCPClient
                 ClientDisconnected(this, new ClientEventArgs(client));
         }
 
-        protected virtual void OnClientMessageDisplayed(TcpClient client, string message)
+        protected virtual void OnClientMessageDisplayed(string message)
         {
             if (ClientMessageDisplayed != null)
-                ClientMessageDisplayed(this, new ClientDataReadEventArgs(client, message));
+                ClientMessageDisplayed(this, new ClientDataReadEventArgs(message));
         }
 
         protected virtual void OnErrorHappened(Exception error)
