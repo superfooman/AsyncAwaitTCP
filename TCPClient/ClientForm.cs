@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -98,14 +99,14 @@ namespace TCPClient
 
         private void displayMessage(string name, string message)
         {
-            // To-Do: Rewrite using TPL
+
             Action<string, string> action = (stringx, stringy) =>
             {
                 displayTextBox.Text += string.Format("[{0}]: {1}", stringx, stringy);
                 displayTextBox.SelectionStart = displayTextBox.Text.Length;
                 displayTextBox.ScrollToCaret();
             };
-
+            
             if (this.InvokeRequired)
             {
                 this.Invoke(action, new object[] { name, message + Environment.NewLine });
@@ -118,7 +119,6 @@ namespace TCPClient
 
         private void displayMessage(string message)
         {
-            // To-Do: Rewrite using TPL
             Action<string> action = (stringInput) =>
             {
                 displayTextBox.Text += string.Format("{0}", stringInput);
@@ -138,17 +138,26 @@ namespace TCPClient
 
         private void remoteClient_Connected(object sender, ClientEventArgs args)
         {
-            displayMessage(args.RemoteEndPoint, "Successfully connected");
+            Task.Factory.StartNew(() =>
+            {
+                displayMessage(args.RemoteEndPoint, "Successfully connected");
+            });
         }
 
         private void remoteClient_Disconnected(object sender, ClientEventArgs args)
         {
-            displayMessage(args.RemoteEndPoint, "Successfully disconnected");
+            Task.Factory.StartNew(() =>
+            {
+                displayMessage(args.RemoteEndPoint, "Successfully disconnected");
+            });
         }
 
         private void remoteClient_MessageDisplayed(object sender, ClientDataReadEventArgs args)
         {
-            displayMessage(args.Message);
+            Task.Factory.StartNew(() =>
+            {
+                displayMessage(args.Message);
+            });
         }
 
         private void remoteClient_ErrorHappened(object sender, GeneralErrorEventArgs args)

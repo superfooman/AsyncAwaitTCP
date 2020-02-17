@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Net;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace TCPServer
@@ -155,17 +156,26 @@ namespace TCPServer
 
         private void server_ClientConnected(object sender, ClientConnectedEventArgs args)
         {
-            displayMessage(args.RemoteEndPoint, "Successfully connected");
+           Task.Factory.StartNew(() =>
+           {
+               displayMessage(args.RemoteEndPoint, "Successfully connected");
+           });
         }
 
         private void server_ClientDisconnected(object sender, ClientDataReadEventArgs args)
         {
-            displayMessage(args.RemoteEndPoint, args.Message);
+            Task.Factory.StartNew(() =>
+            {
+                displayMessage(args.RemoteEndPoint, args.Message);
+            });
         }
 
         private void server_ClientMessageDisplayed(object sender, ClientDataReadEventArgs args)
         {
-            displayMessage(args.RemoteEndPoint, args.Message);
+            Task.Factory.StartNew(() =>
+            {
+                displayMessage(args.RemoteEndPoint, args.Message);
+            });
         }
 
         private void server_ErrorHappened(object sender, GeneralErrorEventArgs args)
