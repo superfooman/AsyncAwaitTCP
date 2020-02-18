@@ -141,7 +141,7 @@ namespace TCPClient
             Task.Factory.StartNew(() =>
             {
                 displayMessage(args.RemoteEndPoint, "Successfully connected");
-            });
+            }).Wait();
         }
 
         private void remoteClient_Disconnected(object sender, ClientEventArgs args)
@@ -149,15 +149,16 @@ namespace TCPClient
             Task.Factory.StartNew(() =>
             {
                 displayMessage(args.RemoteEndPoint, "Successfully disconnected");
-            });
+            }).Wait();
         }
 
         private void remoteClient_MessageDisplayed(object sender, ClientDataReadEventArgs args)
         {
+
             Task.Factory.StartNew(() =>
             {
                 displayMessage(args.Message);
-            });
+            }).Wait();
         }
 
         private void remoteClient_ErrorHappened(object sender, GeneralErrorEventArgs args)

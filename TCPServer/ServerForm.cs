@@ -159,7 +159,7 @@ namespace TCPServer
            Task.Factory.StartNew(() =>
            {
                displayMessage(args.RemoteEndPoint, "Successfully connected");
-           });
+           }).Wait();
         }
 
         private void server_ClientDisconnected(object sender, ClientDataReadEventArgs args)
@@ -167,7 +167,7 @@ namespace TCPServer
             Task.Factory.StartNew(() =>
             {
                 displayMessage(args.RemoteEndPoint, args.Message);
-            });
+            }).Wait();
         }
 
         private void server_ClientMessageDisplayed(object sender, ClientDataReadEventArgs args)
@@ -175,7 +175,7 @@ namespace TCPServer
             Task.Factory.StartNew(() =>
             {
                 displayMessage(args.RemoteEndPoint, args.Message);
-            });
+            }).Wait();
         }
 
         private void server_ErrorHappened(object sender, GeneralErrorEventArgs args)
