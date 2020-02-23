@@ -145,7 +145,7 @@ namespace TCPServer
                    if (args.NumberOfClients > 0)
                        this.Invoke(action, new object[] { string.Format("Connection x {0}", args.NumberOfClients), Color.LightGreen });
                    if (args.NumberOfClients == 0)
-                       statusBarUpdate("Waiting", Color.Aqua);
+                       this.Invoke(action, new object[] { "Waiting", Color.Aqua });
                }
                else
                {
