@@ -10,7 +10,7 @@ namespace TCPClient
     {
         private readonly TcpClient remoteClient;
         private Task receivingMessageTask;
-
+        private bool isConnect;
         #region Events
         public EventHandler<ClientEventArgs> ClientConnected;
         public EventHandler<ClientEventArgs> ClientDisconnected;
@@ -23,13 +23,17 @@ namespace TCPClient
         {
             remoteClient = new TcpClient();
             receivingMessageTask = null;
+            isConnect = false;
         }
         #endregion
+
+        public bool HasConnection { get { return (isConnect); } }
 
         #region public API
         public async Task Connect(IPAddress server, int port)
         {
             await remoteClient.ConnectAsync(server, port);
+            isConnect = true;
             receivingMessageTask = Task.Run(() => receiveMessageAysnc(remoteClient));
             OnClientConnected(remoteClient);
             await Task.WhenAll(receivingMessageTask);
@@ -39,6 +43,7 @@ namespace TCPClient
         {
             remoteClient.GetStream().Close();
             remoteClient.Close();
+            isConnect = false;
             OnClientDisconnected(remoteClient);
         }
 
@@ -54,6 +59,7 @@ namespace TCPClient
             catch (Exception ex)
             {
                 writer.Close();
+                isConnect = false;
                 OnErrorHappened(ex);
                 OnClientDisconnected(remoteClient);
             }
@@ -67,7 +73,7 @@ namespace TCPClient
             StreamReader reader = new StreamReader(networkStream);
             try
             {
-                while (true)
+                while (isConnect)
                 {
                     string message = await reader.ReadLineAsync();
                     if (!isConnectionAvailable(remoteClient))
@@ -80,6 +86,7 @@ namespace TCPClient
             }
             catch (Exception ex)
             {
+                isConnect = false;
                 OnErrorHappened(ex);
                 OnClientDisconnected(remoteClient);
             }

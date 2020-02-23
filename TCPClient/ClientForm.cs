@@ -18,6 +18,7 @@ namespace TCPClient
         public ClientForm()
         {
             InitializeComponent();
+            remoteClient = new RemoteClient();
         }
 
         private void ClientForm_Load(object sender, EventArgs e)
@@ -33,21 +34,23 @@ namespace TCPClient
         {
             try
             {
-                IPAddress ipaddress;
-                int port;
-
-                if (validate(out ipaddress, out port))
+                if (!remoteClient.HasConnection)
                 {
-                    remoteClient = new RemoteClient();
-                    remoteClient.ClientConnected += remoteClient_Connected;
-                    remoteClient.ClientDisconnected += remoteClient_Disconnected;
-                    remoteClient.ClientMessageDisplayed += remoteClient_MessageDisplayed;
-                    remoteClient.ErrorHappened += remoteClient_ErrorHappened;
-                    await remoteClient.Connect(ipaddress, port);
-                }
+                    IPAddress ipaddress;
+                    int port;
+                    if (validate(out ipaddress, out port))
+                    {
+                        remoteClient = new RemoteClient();
+                        remoteClient.ClientConnected += remoteClient_Connected;
+                        remoteClient.ClientDisconnected += remoteClient_Disconnected;
+                        remoteClient.ClientMessageDisplayed += remoteClient_MessageDisplayed;
+                        remoteClient.ErrorHappened += remoteClient_ErrorHappened;
+                        await remoteClient.Connect(ipaddress, port);
+                    }
 
-                ipaddressTextBox.ReadOnly = true;
-                portTextBox.ReadOnly = true;
+                    ipaddressTextBox.ReadOnly = true;
+                    portTextBox.ReadOnly = true;
+                }
             }
             catch (Exception ex)
             {
@@ -138,23 +141,25 @@ namespace TCPClient
 
         private void remoteClient_Connected(object sender, ClientEventArgs args)
         {
+            // UI main thread
             Task.Factory.StartNew(() =>
             {
                 displayMessage(args.RemoteEndPoint, "Successfully connected");
-            }).Wait();
+            });
         }
 
         private void remoteClient_Disconnected(object sender, ClientEventArgs args)
         {
+            // UI main thread
             Task.Factory.StartNew(() =>
             {
                 displayMessage(args.RemoteEndPoint, "Successfully disconnected");
-            }).Wait();
+            });
         }
 
         private void remoteClient_MessageDisplayed(object sender, ClientDataReadEventArgs args)
         {
-
+            // Return messages are from different thread (than UI), block the thread until the task is complete
             Task.Factory.StartNew(() =>
             {
                 displayMessage(args.Message);

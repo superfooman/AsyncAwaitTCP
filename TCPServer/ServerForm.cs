@@ -136,22 +136,25 @@ namespace TCPServer
 
         private void server_NumberOfClientConnected(object sender, NumberOfClientConnectedEventArgs args)
         {
-            Action<string, Color> action = statusBarUpdate;
+            Task.Factory.StartNew(() =>
+           {
+               Action<string, Color> action = statusBarUpdate;
 
-            if (this.InvokeRequired)
-            {
-                if (args.NumberOfClients > 0)
-                    this.Invoke(action, new object[] { string.Format("Connection x {0}", args.NumberOfClients), Color.LightGreen });
-                if (args.NumberOfClients == 0)
-                    statusBarUpdate("Waiting", Color.Aqua);
-            }
-            else
-            {
-                if (args.NumberOfClients > 0)
-                    action(string.Format("Connection x {0}", args.NumberOfClients), Color.LightGreen);
-                if (args.NumberOfClients == 0)
-                    statusBarUpdate("Waiting", Color.Aqua);
-            }
+               if (this.InvokeRequired)
+               {
+                   if (args.NumberOfClients > 0)
+                       this.Invoke(action, new object[] { string.Format("Connection x {0}", args.NumberOfClients), Color.LightGreen });
+                   if (args.NumberOfClients == 0)
+                       statusBarUpdate("Waiting", Color.Aqua);
+               }
+               else
+               {
+                   if (args.NumberOfClients > 0)
+                       action(string.Format("Connection x {0}", args.NumberOfClients), Color.LightGreen);
+                   if (args.NumberOfClients == 0)
+                       statusBarUpdate("Waiting", Color.Aqua);
+               }
+           });
         }
 
         private void server_ClientConnected(object sender, ClientConnectedEventArgs args)
@@ -159,7 +162,7 @@ namespace TCPServer
            Task.Factory.StartNew(() =>
            {
                displayMessage(args.RemoteEndPoint, "Successfully connected");
-           }).Wait();
+           });
         }
 
         private void server_ClientDisconnected(object sender, ClientDataReadEventArgs args)
@@ -167,7 +170,7 @@ namespace TCPServer
             Task.Factory.StartNew(() =>
             {
                 displayMessage(args.RemoteEndPoint, args.Message);
-            }).Wait();
+            });
         }
 
         private void server_ClientMessageDisplayed(object sender, ClientDataReadEventArgs args)
@@ -175,7 +178,7 @@ namespace TCPServer
             Task.Factory.StartNew(() =>
             {
                 displayMessage(args.RemoteEndPoint, args.Message);
-            }).Wait();
+            });
         }
 
         private void server_ErrorHappened(object sender, GeneralErrorEventArgs args)
