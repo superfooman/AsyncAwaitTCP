@@ -267,6 +267,8 @@ namespace TCPServer
             }
         }
 
+
+        // ============================================ For demo purpose ======================================================== //
         // Simple client remote API commands
         internal bool Validate() 
         {
@@ -298,10 +300,29 @@ namespace TCPServer
             return commandDictionary;
         }
 
-        // Simple client remote API commands for Math operation (for demonstrating purpose)
+        // ============================================ For demo purpose ======================================================== //
+        // Simple client remote API commands for Math operation (it can be another object or etc!)
         internal double Adder(double a, double b)
         {
             return a + b;
+        }
+
+        internal double Multiply(double a, double b)
+        {
+            return a * b;
+        }
+
+        internal int Sqrt(int num)
+        {
+            long lo = 0, hi = num;
+            while (lo < hi)
+            {
+                long mid = lo + (hi - lo) / 2;
+                if ((mid * mid <= num) && ((mid + 1) * (mid + 1) > num)) return (int)mid;
+                if (mid * mid < num) lo = mid + 1;
+                else hi = mid;
+            }
+            return (int)lo;
         }
     }
 }

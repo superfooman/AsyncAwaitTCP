@@ -55,7 +55,7 @@ namespace TCPServer.APICommand
             return command;
         }
 
-        public bool ArgumentsValidation(string[] arguments)
+        public virtual bool ArgumentsValidation(string[] arguments)
         {
             bool status;
             Inputs = Arguments;

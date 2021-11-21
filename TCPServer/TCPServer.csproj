@@ -49,6 +49,7 @@
     <Compile Include="APIArgument\ArgumentBase.cs" />
     <Compile Include="APIArgument\DoubleArgs.cs" />
     <Compile Include="APIArgument\IArgs.cs" />
+    <Compile Include="APIArgument\IntegerArgs.cs" />
     <Compile Include="APIArgument\StringArgs.cs" />
     <Compile Include="APICommand\Adder.cs" />
     <Compile Include="APICommand\CommandBase.cs" />
@@ -57,6 +58,7 @@
     <Compile Include="APICommand\GetNumberOfAPICommands.cs" />
     <Compile Include="APICommand\GetNumberOfClients.cs" />
     <Compile Include="APICommand\ICommand.cs" />
+    <Compile Include="APICommand\Sqrt.cs" />
     <Compile Include="APICommand\Validate.cs" />
     <Compile Include="APIFeedback\ValidFeedBack.cs" />
     <Compile Include="APIFeedback\IFeedBack.cs" />
